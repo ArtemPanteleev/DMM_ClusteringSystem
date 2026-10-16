@@ -152,6 +152,22 @@ except ImportError as e:
     print(f"⚠️  CLARANS (pyclustering) не загружен: {e}")
     print("   Убедитесь, что установлены: pip install pyclustering numpy")
 
+# Импорт DENCLUE
+try:
+    from ClusteringMethods.DENCLUEClustering import DENCLUE, ConcreteStrategyDENCLUE
+    print("✅ DENCLUE успешно загружен и зарегистрирован!")
+except ImportError as e:
+    print(f"⚠️ DENCLUE не загружен: {e}")
+    print("   Убедитесь, что установлены: pip install numpy scipy scikit-learn")
+
+# Импорт расширенного FCM (существующий fuzzy_cmeans сохраняется)
+try:
+    from ClusteringMethods.FCMClustering import ConcreteStrategyFCM_from_PYCLUSTERING
+    print("✅ FCM (PyClustering) успешно загружен и зарегистрирован!")
+except ImportError as e:
+    print(f"⚠️ FCM (PyClustering) не загружен: {e}")
+    print("   Убедитесь, что установлены: pip install pyclustering scikit-learn numpy")
+
 # Экспортируем все
 __all__ = [
     'Strategy',
@@ -175,4 +191,7 @@ __all__ = [
     'ConcreteStrategySOM_from_PYCLUSTERING',
     'ConcreteStrategyCLIQUE',
     'ConcreteStrategyCLARANS',
+    'DENCLUE',
+    'ConcreteStrategyDENCLUE',
+    'ConcreteStrategyFCM_from_PYCLUSTERING',
 ]

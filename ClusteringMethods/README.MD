@@ -982,3 +982,98 @@ class pyclustering.cluster.clarans.clarans(
 **Источник:** [Документация pyclustering](https://pyclustering.github.io/docs/0.10.1/html/d6/d1f/classpyclustering_1_1cluster_1_1clarans_1_1clarans.html) и `ClusteringMethods/ClaransClustering.py`
 
 ---
+
+---
+
+### 27. DENCLUE (Кластеризация по гауссовской плотности)
+
+**Установка:**
+```bash
+python -m pip install numpy scipy scikit-learn
+```
+
+**Импорт:**
+```python
+from ClusteringMethods.DENCLUEClustering import DENCLUE, ConcreteStrategyDENCLUE
+```
+
+**Описание метода:**
+Собственная реализация DENCLUE на NumPy/SciPy: поиск аттракторов плотности,
+объединение по плотностным мостам и выделение шума (`-1`). В pyclustering 0.10.1.2
+DENCLUE отсутствует. ID стратегии: `denclue`.
+
+**Сигнатура:**
+```python
+DENCLUE(sigma=0.5, xi=0.01, tolerance=0.0001, max_iter=200,
+        merge_radius=0.5, min_cluster_size=1, normalize=False, batch_size=128)
+```
+
+**Параметры:**
+- **sigma** (*float*, 0.5): положительная ширина гауссовского ядра.
+- **xi** (*float*, 0.01): минимальное среднее гауссовское влияние, от 0 до 1;
+  плотность считается без нормирующего множителя KDE.
+- **tolerance** (*float*, 0.0001): положительный порог перемещения аттрактора.
+- **max_iter** (*int*, 200): положительный лимит итераций; несошедшиеся точки — шум.
+- **merge_radius** (*float*, 0.5): положительный радиус объединения аттракторов;
+  плотность на соединяющем отрезке проверяется дискретно с шагом не более `sigma/2`.
+- **min_cluster_size** (*int*, 1): минимальный размер кластера с учётом повторений.
+- **normalize** (*bool*, False): StandardScaler перед кластеризацией.
+- **batch_size** (*int*, 128): положительный размер блока расстояний для ограничения памяти.
+
+**Пример:**
+```python
+labels = DENCLUE(sigma=0.5, xi=0.02).fit_predict(X)
+```
+
+Стоимость поиска аттракторов квадратична по числу различных точек. Начинайте с малых
+выборок; для изображений учитывайте масштаб RGB или включайте нормализацию.
+
+**Источники:** [Hinneburg, Keim, KDD 1998](https://s.aaai.org/Papers/KDD/1998/KDD98-009.pdf),
+[описание реализации, ограничений и тестов](../Documentation/Programming%20documentation/DENCLUE%20и%20FCM.md).
+
+---
+
+### 28. FCM (Расширенный Fuzzy C-Means из pyclustering)
+
+**Установка:**
+```bash
+python -m pip install pyclustering scikit-learn numpy
+```
+
+**Импорт:**
+```python
+from ClusteringMethods.FCMClustering import ConcreteStrategyFCM_from_PYCLUSTERING
+```
+
+**Описание метода:**
+Отдельная стратегия `fcm_pyc` с выбором инициализации, воспроизводимым seed,
+нормализацией и переключением CCORE/Python. Существующий `fuzzy_cmeans` из
+scikit-fuzzy сохранён. Выход — жёсткие метки кластеров для общего GUI.
+
+**Сигнатура базового алгоритма:**
+```python
+fcm(data, initial_centers, m=2.0, tolerance=0.001, itermax=200, ccore=True)
+```
+
+**Параметры стратегии:**
+- **n_clusters** (*int*, 3): положительное число кластеров, не больше числа различных объектов.
+- **m** (*float*, 2.0): фаззи-фактор, строго больше 1.
+- **tolerance** (*float*, 0.001): положительный порог максимального квадрата смещения центров.
+- **itermax** (*int*, 200): положительный лимит итераций.
+- **init** (*str*, `kmeans++`): `kmeans++` или `random`.
+- **random_state** (*int*, 42): seed начальных центров, от 0 до 4294967295.
+- **normalize** (*bool*, False): стандартизировать признаки перед инициализацией.
+- **ccore** (*bool*, True): использовать C++; при недоступности автоматически выбрать Python.
+
+**Пример:**
+```python
+from ClusteringMethods.ClasteringAlgorithms import StrategiesManager
+config = StrategiesManager.getStrategyRunConfigById("fcm_pyc")
+config["n_clusters"] = 3
+config["init"] = "random"
+config["random_state"] = 42
+labels = ConcreteStrategyFCM_from_PYCLUSTERING().clastering_points(X, config)
+```
+
+**Источники:** [Исходный код pyclustering FCM](https://github.com/annoviko/pyclustering/blob/master/pyclustering/cluster/fcm.py),
+[параметры, примеры и проверки](../Documentation/Programming%20documentation/DENCLUE%20и%20FCM.md).

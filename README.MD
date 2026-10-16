@@ -364,6 +364,18 @@ python TestMethods/test_*.py
 
 Подробнее о тестировании: [`TestMethods/README.md`](TestMethods/README.md)
 
+### DENCLUE и расширенный FCM
+
+В интерфейсе доступны **DENCLUE** (`denclue`) и **FCM (PyClustering)** (`fcm_pyc`).
+Существующий Fuzzy C-Means на scikit-fuzzy сохранён.
+[Подробная документация: параметры, примеры и ограничения](Documentation/Programming%20documentation/DENCLUE%20и%20FCM.md).
+
+```bash
+python -m unittest TestMethods.test_denclue_fcm_regression -v
+python TestMethods/test_denclue.py --no-show
+python TestMethods/test_fcm_pyc.py --no-show
+```
+
 ### Примеры использования
 
 #### Пример 1: Запуск GUI приложения
