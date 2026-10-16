@@ -84,6 +84,8 @@ DMM_ClusteringSystem/
 │   ├── SOMClustering.py
 │   ├── CliqueClustering.py
 │   ├── ClaransClustering.py
+│   ├── DENCLUEClustering.py
+│   ├── FCMClustering.py
 │   └── README.md               # Документация по методам
 │
 ├── AnalysisMethods/            # Методы анализа качества кластеризации
@@ -358,23 +360,17 @@ python TestMethods/test_wave.py
 # Тест DBSCAN
 python TestMethods/test_dbscan.py
 
+# Тест DENCLUE
+python TestMethods/test_denclue.py
+
+# Тест FCM (PyClustering)
+python TestMethods/test_fcm_pyc.py
+
 # Тест других алгоритмов
 python TestMethods/test_*.py
 ```
 
 Подробнее о тестировании: [`TestMethods/README.md`](TestMethods/README.md)
-
-### DENCLUE и расширенный FCM
-
-В интерфейсе доступны **DENCLUE** (`denclue`) и **FCM (PyClustering)** (`fcm_pyc`).
-Существующий Fuzzy C-Means на scikit-fuzzy сохранён.
-[Подробная документация: параметры, примеры и ограничения](Documentation/Programming%20documentation/DENCLUE%20и%20FCM.md).
-
-```bash
-python -m unittest TestMethods.test_denclue_fcm_regression -v
-python TestMethods/test_denclue.py --no-show
-python TestMethods/test_fcm_pyc.py --no-show
-```
 
 ### Примеры использования
 
@@ -539,6 +535,7 @@ moons_data, moons_labels = make_moons(n_samples=300, noise=0.1)
 - Добавлена статья `FCM-the_Fuzzy_C-Means_clustering-algorithm.pdf` в `Documentation/Theoretical documentation/`
 - Исправлена ошибка `SyntaxError: unterminated string literal` в `Frameworks_interface/mainwindow.py`
 - Добавлен метод кластеризации **Spectral Clustering**, позже интегрирован в основную ветку с нормализацией данных для изображений
+- Добавлены результаты работы Spectral Clustering на датасетах в `Examples/` из [форка marksavv](https://github.com/marksavv/DMM_ClusteringSystem/tree/a0bacc53b1f2d7fc7ed05cc7286d871ff777b34c/Examples)
 - В `requirements.txt` добавлена зависимость `scikit-fuzzy`
 
 ---
@@ -557,6 +554,7 @@ moons_data, moons_labels = make_moons(n_samples=300, noise=0.1)
 | **Собиров Тельман**              | MeanShift, K-Medians | 📧 [tel9master@mail.ru](mailto:tel9master@mail.ru) |
 | **Курбанов Рамазан**             | X-Means, MBSAS, SOM                       | 📧 [peressmit@mail.ru](mailto:peressmit@mail.ru) |
 | **Кузнецов Сергей**              | CLARANS, CLIQUE                           | 📧 [sergeyk321@yandex.ru](mailto:sergeyk321@yandex.ru) |
+| **Пантелеев Артём** | DENCLUE, расширенный FCM (PyClustering), тесты и документация | 🐙 [ArtemPanteleev](https://github.com/ArtemPanteleev) |
 
 ---
 
@@ -609,6 +607,8 @@ moons_data, moons_labels = make_moons(n_samples=300, noise=0.1)
 - **SOM**: когда нужна нейросетевая кластеризация с сохранением соседства кластеров; число кластеров не больше размера сетки нейронов
 - **CLIQUE**: когда нужна быстрая кластеризация на больших данных; метод разбиения пространства на сетку, не вычисляет расстояния между точками; плохо работает на данных с изогнутыми формами (moons, circles)
 - **CLARANS**: когда важна устойчивость к выбросам; использует реальные точки данных (медоиды) как центры кластеров; медленнее KMeans, но надёжнее при наличии шума
+- **DENCLUE**: для кластеризации по плотности с выделением шума на небольших выборках
+- **FCM (PyClustering)**: для нечёткой кластеризации с выбором инициализации и нормализации
 - **GMM**: для вероятностной кластеризации, перекрывающихся кластеров
 
 Подробное описание каждого метода и рекомендации: [`ClusteringMethods/README.md`](ClusteringMethods/README.md)

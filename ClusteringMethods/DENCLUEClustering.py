@@ -1,8 +1,24 @@
-"""DENCLUE с гауссовской плотностью и поиском аттракторов сдвигом среднего.
+"""
+DENCLUE Algorithm Implementation
+Автор: Пантелеев Артём [pantelartems@gmail.com]
+Последнее обновление: 2026-10-17
 
-Автор: ArtemPanteleev. Дата: 2026-10-16.
-Плотность — среднее гауссовских влияний без нормирующего множителя KDE.
-Связность аттракторов приближается проверкой плотности вдоль отрезков.
+Кластеризация методом DENCLUE на базе NumPy и SciPy.
+
+Алгоритм оценивает плотность гауссовскими ядрами, перемещает точки
+к аттракторам плотности и объединяет связанные аттракторы в кластеры.
+Точки с низкой плотностью и малые кластеры помечаются как шум (-1).
+
+Ограничения:
+- Плотность считается как среднее гауссовских влияний без нормировки KDE.
+  Порог xi задаётся в диапазоне от 0 до 1.
+- Связность аттракторов проверяется вдоль отрезков с шагом не больше sigma/2.
+  Это численное приближение условия плотностной связности.
+- Сложность поиска аттракторов квадратична по числу различных точек.
+  Для изображений рекомендуется предварительно уменьшить разрешение.
+
+Источник:
+https://s.aaai.org/Papers/KDD/1998/KDD98-009.pdf
 """
 
 import warnings
@@ -32,7 +48,7 @@ class DENCLUE:
     def __init__(self, sigma=0.5, xi=0.01, tolerance=0.0001, max_iter=200,
                  merge_radius=0.5, min_cluster_size=1, normalize=False,
                  batch_size=128):
-        """Сохранить параметры; их проверка выполняется перед обучением."""
+        """Инициализирует параметры алгоритма DENCLUE."""
         self.sigma = sigma
         self.xi = xi
         self.tolerance = tolerance
@@ -43,7 +59,7 @@ class DENCLUE:
         self.batch_size = batch_size
 
     def _validate(self):
-        """Проверить диапазоны параметров до вычисления плотности."""
+        """Проверяет допустимые значения параметров алгоритма."""
         for name in ("sigma", "tolerance", "merge_radius"):
             positive_real(name, getattr(self, name))
         positive_real("xi", self.xi, allow_zero=True)
@@ -53,14 +69,14 @@ class DENCLUE:
             positive_integer(name, getattr(self, name))
 
     def _weights(self, queries):
-        """Получить гауссовские влияния с учётом кратности исходных точек."""
+        """Вычисляет гауссовские влияния с учётом повторяющихся точек."""
         distances = cdist(queries, self._samples)
         with np.errstate(over="ignore", under="ignore"):
             weights = np.exp(-0.5 * np.square(distances / self.sigma))
         return weights * self._counts
 
     def _density(self, queries):
-        """Вычислить плотность запросов ограниченными по памяти блоками."""
+        """Вычисляет плотность точек блоками размера batch_size."""
         result = np.empty(len(queries))
         for start in range(0, len(queries), self.batch_size):
             block = queries[start:start + self.batch_size]
@@ -68,7 +84,7 @@ class DENCLUE:
         return result
 
     def _connected(self, left, right):
-        """Проверить плотностный мост с шагом не больше sigma/2.
+        """Проверяет плотность между аттракторами с шагом не больше sigma/2.
 
         Это дискретная аппроксимация непрерывного условия DENCLUE.
         Концы отрезка уже проверены на плотность >= xi.
@@ -83,7 +99,19 @@ class DENCLUE:
         return True
 
     def fit(self, data):
-        """Найти аттракторы, объединить плотные области и присвоить шуму -1."""
+        """
+        Выполняет кластеризацию данных методом DENCLUE.
+
+        Parameters:
+        -----------
+        data : array-like
+            Массив точек в формате (n_samples, n_features).
+
+        Returns:
+        --------
+        DENCLUE
+            Обученная модель с метками labels_ и аттракторами attractors_.
+        """
         self._validate()
         features = prepare_features(data)
         self.scaler_ = StandardScaler().fit(features) if self.normalize else None
@@ -129,7 +157,7 @@ class DENCLUE:
             parents = np.arange(len(modes))
 
             def root(index):
-                """Найти компоненту с уплотнением пути."""
+                """Находит компоненту связности с уплотнением пути."""
                 while parents[index] != index:
                     parents[index] = parents[parents[index]]
                     index = parents[index]
@@ -158,7 +186,19 @@ class DENCLUE:
         return self
 
     def fit_predict(self, data):
-        """Вернуть метки в исходном порядке объектов."""
+        """
+        Выполняет кластеризацию и возвращает метки.
+
+        Parameters:
+        -----------
+        data : array-like
+            Массив точек в формате (n_samples, n_features).
+
+        Returns:
+        --------
+        ndarray, shape (n_samples,)
+            Метка кластера для каждой точки. Шум обозначается меткой -1.
+        """
         return self.fit(data).labels_
 
 
@@ -166,11 +206,11 @@ class DENCLUE:
     "denclue", "DENCLUE", "Гауссовская плотность, аттракторы и выделение шума",
 )
 class ConcreteStrategyDENCLUE(Strategy):
-    """Интеграция DENCLUE с точками, изображениями и параметрами GUI."""
+    """Стратегия кластеризации методом DENCLUE."""
 
     @classmethod
     def _setupParams(cls):
-        """Описать все параметры DENCLUE для StrategyOptionsDialog."""
+        """Инициализирует параметры стратегии DENCLUE."""
         cls._addParam("sigma", "Ширина гауссовского ядра", StrategyParamType.UFloating,
                       "Положительный масштаб влияния точки в единицах признаков.", 0.5)
         cls._addParam("xi", "Минимальная плотность", StrategyParamType.UFloating,
@@ -189,13 +229,41 @@ class ConcreteStrategyDENCLUE(Strategy):
                       "Число одновременно обрабатываемых точек; ограничивает память, не размер выборки.", 128)
 
     def _cluster(self, data, params):
-        """Создать независимую модель для одного запуска стратегии."""
+        """Запускает DENCLUE и возвращает метки кластеров."""
         return DENCLUE(**{name: params[name] for name in self.params()}).fit_predict(data)
 
     def clastering_points(self, points: np.ndarray, params: StrategyRunConfig) -> np.ndarray:
-        """Кластеризовать матрицу точек (n_samples, n_features)."""
+        """
+        Кластеризация точек методом DENCLUE.
+
+        Parameters:
+        -----------
+        points : ndarray
+            Точки данных в виде массива (n_samples, n_features).
+        params : StrategyRunConfig
+            Параметры запуска стратегии.
+
+        Returns:
+        --------
+        ndarray
+            Метка кластера для каждой точки.
+        """
         return self._cluster(points, params)
 
     def clastering_image(self, pixels: np.ndarray, params: StrategyRunConfig) -> np.ndarray:
-        """Кластеризовать матрицу пикселей (n_pixels, n_channels)."""
+        """
+        Кластеризация изображения методом DENCLUE.
+
+        Parameters:
+        -----------
+        pixels : ndarray
+            Пиксели изображения в виде массива признаков.
+        params : StrategyRunConfig
+            Параметры запуска стратегии.
+
+        Returns:
+        --------
+        ndarray
+            Метка кластера для каждого пикселя.
+        """
         return self._cluster(pixels, params)

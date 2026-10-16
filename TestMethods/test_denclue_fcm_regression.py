@@ -1,7 +1,6 @@
-"""Автоматические проверки DENCLUE и расширенного FCM без графических окон.
-
-Автор: ArtemPanteleev. Дата: 2026-10-16.
-Запуск: python -m unittest TestMethods.test_denclue_fcm_regression -v
+"""
+Тестовый скрипт для проверки DENCLUE и FCM (PyClustering)
+Автор: Пантелеев Артём [pantelartems@gmail.com]
 """
 
 import unittest

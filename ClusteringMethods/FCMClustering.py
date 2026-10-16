@@ -1,6 +1,26 @@
-"""Расширенный FCM из pyclustering: инициализация, масштабирование и CCORE.
+"""
+FCM Algorithm Implementation
+Автор: Пантелеев Артём [pantelartems@gmail.com]
+Последнее обновление: 2026-10-17
 
-Автор: ArtemPanteleev. Дата: 2026-10-16.
+Кластеризация методом Fuzzy C-Means на базе pyclustering.cluster.fcm.
+
+Алгоритм вычисляет степени принадлежности точек к кластерам и обновляет
+их центры. Для отображения в интерфейсе каждой точке присваивается метка
+кластера с наибольшей степенью принадлежности.
+
+Ограничения:
+- Начальные центры выбираются через sklearn.cluster.kmeans_plusplus:
+  pyclustering.cluster.center_initializer не работает с numpy >= 2
+  (обращается к удалённому numpy.warnings).
+- C++ часть pyclustering (ccore) собрана не для всех платформ
+  (например, отсутствует для macOS arm64). Если её не удаётся
+  загрузить, используется реализация на Python.
+- Если число кластеров равно числу различных точек, возвращается точное
+  разбиение по координатам. Это обходит ошибку нулевых расстояний pyclustering.
+
+Источник:
+https://github.com/annoviko/pyclustering/blob/master/pyclustering/cluster/fcm.py
 """
 
 import numpy as np
@@ -21,11 +41,11 @@ from ClusteringMethods._validation import (
     "Расширенный Fuzzy C-Means: выбор начальных центров и нормализация",
 )
 class ConcreteStrategyFCM_from_PYCLUSTERING(Strategy):
-    """Стратегия FCM, сохраняющая существующий метод fuzzy_cmeans."""
+    """Стратегия кластеризации методом FCM из pyclustering."""
 
     @classmethod
     def _setupParams(cls):
-        """Описать параметры для автоматически создаваемого окна настроек."""
+        """Инициализирует параметры стратегии FCM."""
         cls._addParam("n_clusters", "Количество кластеров", StrategyParamType.UNumber,
                       "От 1 до количества различных объектов в данных.", 3)
         cls._addParam("m", "Фаззи-фактор", StrategyParamType.UFloating,
@@ -45,7 +65,7 @@ class ConcreteStrategyFCM_from_PYCLUSTERING(Strategy):
                       "Использовать CCORE, если доступно; иначе перейти на Python.", True)
 
     def _cluster(self, data, params):
-        """Подготовить данные и вернуть одну целочисленную метку на объект."""
+        """Запускает FCM и возвращает метки кластеров."""
         features = prepare_features(data)
         for name in ("n_clusters", "itermax"):
             positive_integer(name, params[name])
@@ -65,10 +85,8 @@ class ConcreteStrategyFCM_from_PYCLUSTERING(Strategy):
         n_clusters = params["n_clusters"]
         if n_clusters > len(unique):
             raise ValueError("n_clusters превышает количество различных объектов.")
-        # Здесь минимум целевой функции равен нулю: каждому уникальному
-        # объекту соответствует свой центр. В pyclustering 0.10.1.2 нулевые
-        # расстояния могут дать одинаковую принадлежность разным центрам
-        # и схлопнуть даже изображение из двух цветов в один кластер.
+        # Точное разбиение с нулевой целевой функцией обходит ошибку
+        # обработки нулевых расстояний в pyclustering 0.10.1.2.
         if n_clusters == len(unique):
             return inverse.astype(np.intp, copy=False)
 
@@ -98,9 +116,37 @@ class ConcreteStrategyFCM_from_PYCLUSTERING(Strategy):
         return labels
 
     def clastering_points(self, points: np.ndarray, params: StrategyRunConfig) -> np.ndarray:
-        """Кластеризовать строки матрицы точек (n_samples, n_features)."""
+        """
+        Кластеризация точек методом FCM.
+
+        Parameters:
+        -----------
+        points : ndarray
+            Точки данных в виде массива (n_samples, n_features).
+        params : StrategyRunConfig
+            Параметры запуска стратегии.
+
+        Returns:
+        --------
+        ndarray
+            Метка кластера для каждой точки.
+        """
         return self._cluster(points, params)
 
     def clastering_image(self, pixels: np.ndarray, params: StrategyRunConfig) -> np.ndarray:
-        """Кластеризовать строки матрицы пикселей (n_pixels, n_channels)."""
+        """
+        Кластеризация изображения методом FCM.
+
+        Parameters:
+        -----------
+        pixels : ndarray
+            Пиксели изображения в виде массива признаков.
+        params : StrategyRunConfig
+            Параметры запуска стратегии.
+
+        Returns:
+        --------
+        ndarray
+            Метка кластера для каждого пикселя.
+        """
         return self._cluster(pixels, params)

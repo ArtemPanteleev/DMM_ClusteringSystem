@@ -1,6 +1,7 @@
-"""Проверка входных данных DENCLUE и FCM.
-
-Автор: ArtemPanteleev. Дата: 2026-10-16.
+"""
+Проверка входных данных DENCLUE и FCM
+Автор: Пантелеев Артём [pantelartems@gmail.com]
+Последнее обновление: 2026-10-17
 """
 
 from numbers import Integral, Real
@@ -9,7 +10,7 @@ import numpy as np
 
 
 def prepare_features(data):
-    """Вернуть конечную матрицу (объекты, признаки), не меняя ориентацию осей."""
+    """Приводит входные данные к массиву (n_samples, n_features)."""
     features = np.asarray(data, dtype=np.float64)
     if features.ndim == 1:
         features = features.reshape(-1, 1)
@@ -21,7 +22,7 @@ def prepare_features(data):
 
 
 def positive_real(name, value, allow_zero=False):
-    """Проверить конечное положительное (или неотрицательное) число."""
+    """Проверяет конечное положительное или неотрицательное число."""
     if (isinstance(value, (bool, np.bool_)) or not isinstance(value, Real)
             or not np.isfinite(value) or value < 0
             or (not allow_zero and value == 0)):
@@ -30,7 +31,7 @@ def positive_real(name, value, allow_zero=False):
 
 
 def positive_integer(name, value, allow_zero=False):
-    """Проверить целое число без неявного округления и преобразования bool."""
+    """Проверяет целое число без округления и преобразования bool."""
     if (isinstance(value, (bool, np.bool_)) or not isinstance(value, Integral)
             or value < (0 if allow_zero else 1)):
         relation = ">= 0" if allow_zero else "> 0"

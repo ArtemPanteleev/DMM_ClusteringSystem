@@ -1,7 +1,6 @@
-"""Стандартные визуальные тесты FCM (PyClustering).
-
-Автор: ArtemPanteleev. Дата: 2026-10-16.
-Основа: TestMethods/test_template.py. Для запуска без окон: --no-show.
+"""
+Тестовый скрипт для проверки FCM (PyClustering) с визуализацией
+Автор: Пантелеев Артём [pantelartems@gmail.com]
 """
 
 import argparse
@@ -28,7 +27,7 @@ IMAGES_DIR = Path(__file__).parent / "Images" / ALGORITHM_NAME
 
 
 def generate_test_data_2d(dataset_type="blobs", n_samples=180):
-    """Создать воспроизводимые облака, полумесяцы или концентрические круги."""
+    """Генерация двумерных тестовых данных."""
     if dataset_type == "blobs":
         return make_blobs(n_samples=n_samples, centers=[[-3, 0], [0, 4], [3, 0]],
                           cluster_std=0.25, random_state=42)
@@ -40,13 +39,13 @@ def generate_test_data_2d(dataset_type="blobs", n_samples=180):
 
 
 def generate_test_data_3d():
-    """Создать три разделённых облака в трёх измерениях."""
+    """Генерация трёхмерных тестовых данных."""
     return make_blobs(n_samples=150, n_features=3, centers=3,
                       cluster_std=0.25, random_state=42)
 
 
 def run_strategy(points, **overrides):
-    """Запустить метод через настоящий реестр и проверить контракт меток."""
+    """Запускает стратегию и проверяет формат меток."""
     config = StrategiesManager.getStrategyRunConfigById(STRATEGY_ID)
     for name, value in overrides.items():
         config[name] = value
@@ -60,7 +59,7 @@ def run_strategy(points, **overrides):
 
 
 def save_figure(fig, filename):
-    """Сохранить рисунок в стандартную директорию результатов алгоритма."""
+    """Сохраняет рисунок в директорию результатов."""
     IMAGES_DIR.mkdir(parents=True, exist_ok=True)
     fig.tight_layout()
     fig.savefig(IMAGES_DIR / filename, dpi=150, bbox_inches="tight")
@@ -68,7 +67,7 @@ def save_figure(fig, filename):
 
 
 def scatter(ax, points, labels, title):
-    """Нарисовать данные с заголовком, координатами и сеткой."""
+    """Отображает точки и метки кластеров."""
     if points.shape[1] == 3:
         ax.scatter(points[:, 0], points[:, 1], points[:, 2], c=labels, cmap="tab10", s=15)
         ax.set_zlabel("X3")
@@ -81,7 +80,7 @@ def scatter(ax, points, labels, title):
 
 
 def test_basic_2d_clustering():
-    """Проверить качество на трёх облаках и сравнить с истинными метками."""
+    """Тест базовой кластеризации на 2D данных."""
     points, truth = generate_test_data_2d()
     labels = run_strategy(points)
     score = adjusted_rand_score(truth, labels)
@@ -94,7 +93,7 @@ def test_basic_2d_clustering():
 
 
 def test_parameter_sensitivity():
-    """Сравнить результаты при изменении основного параметра алгоритма."""
+    """Тест чувствительности к параметрам."""
     points, _ = generate_test_data_2d()
     fig, axes = plt.subplots(2, 2, figsize=(10, 8))
     for ax, value in zip(axes.ravel(), (1.5, 2.0, 3.0, 4.0)):
@@ -104,7 +103,7 @@ def test_parameter_sensitivity():
 
 
 def test_different_datasets():
-    """Показать поведение на разных формах, без требования идеального разделения."""
+    """Тест на различных типах данных."""
     fig, axes = plt.subplots(1, 3, figsize=(13, 4))
     for ax, kind in zip(axes, ("blobs", "moons", "circles")):
         points, _ = generate_test_data_2d(kind)
@@ -115,7 +114,7 @@ def test_different_datasets():
 
 
 def test_3d_clustering():
-    """Проверить разделение облаков в трёхмерном пространстве."""
+    """Тест кластеризации в 3D."""
     points, truth = generate_test_data_3d()
     labels = run_strategy(points)
     assert adjusted_rand_score(truth, labels) > 0.95
@@ -126,7 +125,7 @@ def test_3d_clustering():
 
 
 def test_strategy_integration():
-    """Сравнить прямой вызов стратегии с транспонированием внутри Context."""
+    """Тест интеграции со стратегией."""
     points, _ = generate_test_data_2d(n_samples=90)
     config = StrategiesManager.getStrategyRunConfigById(STRATEGY_ID)
     strategy = ConcreteStrategyFCM_from_PYCLUSTERING()
@@ -140,7 +139,7 @@ def test_strategy_integration():
 
 
 def main():
-    """Выполнить все пять проверок; при ошибке завершиться с ненулевым кодом."""
+    """Запускает все тесты."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--no-show", action="store_true", help="Сохранить PNG без графических окон")
     args = parser.parse_args()

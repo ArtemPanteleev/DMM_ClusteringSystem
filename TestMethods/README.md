@@ -43,6 +43,9 @@ DMM_ClusteringSystem/
 │   ├── test_som.py                   # Тест SOM
 │   ├── test_clique.py               # Тест CLIQUE
 │   ├── test_clarans.py              # Тест CLARANS
+│   ├── test_denclue.py               # Тест DENCLUE
+│   ├── test_fcm_pyc.py               # Тест FCM (PyClustering)
+│   ├── test_denclue_fcm_regression.py # Регрессионные тесты DENCLUE и FCM
 │   ├── test_template.py              # Шаблон для новых тестов
 │   │
 │   └── Images/                       # Директория для результатов
@@ -89,7 +92,19 @@ cd <path_to_your_project>\DMM_ClusteringSystem
 
 # Запустите тест WaveClustering
 python TestMethods/test_wave.py
+
+# Тест DENCLUE
+python TestMethods/test_denclue.py --no-show
+
+# Тест FCM (PyClustering)
+python TestMethods/test_fcm_pyc.py --no-show
+
+# Регрессионные тесты DENCLUE и FCM
+python -m unittest TestMethods.test_denclue_fcm_regression -v
 ```
+
+Для `test_denclue.py` и `test_fcm_pyc.py` флаг `--no-show` отключает показ окон.
+Пять стандартных PNG сохраняются в `Images/DENCLUE/` и `Images/FCM_PyClustering/`.
 
 ### Шаг 2: Просмотр Результатов
 
@@ -680,19 +695,3 @@ plt.savefig(IMAGES_DIR / "comparison.png", dpi=150, bbox_inches='tight')
 **Последнее обновление:** 2025-11-06
 
 ---
-
-## DENCLUE и FCM (PyClustering)
-
-```bash
-python -m unittest TestMethods.test_denclue_fcm_regression -v
-python TestMethods/test_denclue.py --no-show
-python TestMethods/test_fcm_pyc.py --no-show
-```
-
-Каждый визуальный скрипт создаёт пять стандартных PNG в `Images/DENCLUE/` или
-`Images/FCM_PyClustering/`. Флаг `--no-show` отключает окна; ошибки возвращают
-ненулевой код завершения. Регрессионные тесты проверяют шум, плотностные мосты,
-повторяющиеся точки, сходимость, валидацию, seed, fallback CCORE и Context для RGB.
-Базовый `test_fuzzy_cmeans.py` продолжает проверять существующую стратегию scikit-fuzzy.
-
-[Параметры и примеры](../Documentation/Programming%20documentation/DENCLUE%20и%20FCM.md).
